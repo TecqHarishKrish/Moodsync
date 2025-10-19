@@ -3,9 +3,13 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const passport = require('./config/passport');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const alarmRoutes = require('./routes/alarmRoutes');
+const authRoutes = require('./routes/authRoutes');
 const { errorHandler, notFound } = require('./middleware/auth');
 
 // Load environment variables
@@ -22,6 +26,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Enable CORS with credentials
 app.use(cors({
   origin: 'http://localhost:3000', // Update this with your frontend URL
@@ -29,8 +48,10 @@ app.use(cors({
 }));
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/alarms', alarmRoutes);
 
 // Add a simple health check endpoint
 app.get('/api/health', (req, res) => {

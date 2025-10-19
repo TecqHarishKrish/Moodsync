@@ -26,7 +26,7 @@ const alarmSchema = new mongoose.Schema({
   sound: {
     type: String,
     default: 'default',
-    enum: ['default', 'gentle', 'nature', 'digital', 'classic', 'birds', 'ocean']
+    enum: ['default', 'gentle', 'nature', 'digital', 'classic']
   },
   volume: {
     type: Number,
@@ -54,30 +54,13 @@ const alarmSchema = new mongoose.Schema({
   },
   smartWake: {
     type: Boolean,
-    default: false // Uses AI to wake at optimal time
+    default: false // AI-based optimal wake time
   },
   smartWakeWindow: {
     type: Number,
-    default: 30, // minutes before alarm time
+    default: 30, // minutes before alarm
     min: 10,
     max: 60
-  },
-  challenges: {
-    enabled: { type: Boolean, default: false },
-    type: { 
-      type: String, 
-      enum: ['math', 'shake', 'scan', 'memory', 'typing'],
-      default: 'math'
-    },
-    difficulty: {
-      type: String,
-      enum: ['easy', 'medium', 'hard'],
-      default: 'medium'
-    }
-  },
-  weather: {
-    enabled: { type: Boolean, default: false },
-    location: { type: String, default: '' }
   },
   lastTriggered: {
     type: Date
@@ -90,35 +73,40 @@ const alarmSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Method to check if alarm should ring today
-alarmSchema.methods.shouldRingToday = function() {
+// Method to check if alarm should trigger today
+alarmSchema.methods.shouldTriggerToday = function() {
   if (!this.isEnabled) return false;
   
   const today = new Date().getDay();
   
   // If no repeat days set, it's a one-time alarm
-  if (this.repeatDays.length === 0) {
-    return true;
-  }
+  if (this.repeatDays.length === 0) return true;
   
   // Check if today is in repeat days
   return this.repeatDays.includes(today);
 };
 
-// Method to get next alarm time
-alarmSchema.methods.getNextAlarmTime = function() {
+// Method to get next trigger time
+alarmSchema.methods.getNextTriggerTime = function() {
   const now = new Date();
   const [hours, minutes] = this.time.split(':').map(Number);
   
-  const alarmTime = new Date();
-  alarmTime.setHours(hours, minutes, 0, 0);
+  const nextTrigger = new Date();
+  nextTrigger.setHours(hours, minutes, 0, 0);
   
-  // If alarm time has passed today, set for tomorrow
-  if (alarmTime <= now) {
-    alarmTime.setDate(alarmTime.getDate() + 1);
+  // If time has passed today, set to tomorrow
+  if (nextTrigger <= now) {
+    nextTrigger.setDate(nextTrigger.getDate() + 1);
   }
   
-  return alarmTime;
+  // If repeat days are set, find next valid day
+  if (this.repeatDays.length > 0) {
+    while (!this.repeatDays.includes(nextTrigger.getDay())) {
+      nextTrigger.setDate(nextTrigger.getDate() + 1);
+    }
+  }
+  
+  return nextTrigger;
 };
 
 module.exports = mongoose.model('Alarm', alarmSchema);
