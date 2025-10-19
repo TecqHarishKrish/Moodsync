@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Smart Alarm - AI-Driven Mood-Adaptive WebApp
 
 A smart alarm application that uses AI to adapt wake times based on mood detection and sleep patterns.
@@ -207,3 +208,7 @@ This project is licensed under the MIT License.
 ## Support
 
 For issues and questions, please open an issue on the GitHub repository.
+=======
+# Moodsync
+AI Mood-Adaptive Alarm Clock
+>>>>>>> 6410badf9c90a6fb53c8213c1a13593043c918f4
