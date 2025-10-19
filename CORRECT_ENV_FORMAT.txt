@@ -1,0 +1,16 @@
+Copy this EXACT line to your .env file for MONGO_URI:
+
+MONGO_URI=mongodb+srv://harishwarr533_db_user:%3CJYGQ3SiHQysJldye%3E@cluster0.y1ldf5a.mongodb.net/smart_alarm?retryWrites=true&w=majority
+
+Make sure:
+1. It starts with "mongodb+srv://" (NOT "mmongodb+srv://")
+2. Password is URL-encoded: %3CJYGQ3SiHQysJldye%3E
+3. Database name is included: /smart_alarm
+4. No extra spaces or line breaks
+
+Your complete .env file should look like:
+
+PORT=5000
+NODE_ENV=development
+JWT_SECRET=your_jwt_secret_key_here
+MONGO_URI=mongodb+srv://harishwarr533_db_user:%3CJYGQ3SiHQysJldye%3E@cluster0.y1ldf5a.mongodb.net/smart_alarm?retryWrites=true&w=majority
