@@ -21,6 +21,14 @@ connectDB();
 // Initialize Express
 const app = express();
 
+// Enable CORS FIRST - before other middleware
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,12 +48,6 @@ app.use(session({
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Enable CORS with credentials
-app.use(cors({
-  origin: 'http://localhost:3000', // Update this with your frontend URL
-  credentials: true
-}));
 
 // API Routes
 app.use('/api/auth', authRoutes);

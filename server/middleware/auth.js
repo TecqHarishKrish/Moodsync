@@ -1,4 +1,5 @@
-const { findSessionByToken, findUserById } = require('../utils/memoryStorage');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 // Protect routes
 const protect = async (req, res, next) => {
@@ -22,14 +23,12 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized, no token' });
     }
 
-    // Find session
-    const session = findSessionByToken(token);
-    if (!session) {
-      return res.status(401).json({ message: 'Session expired, please login again' });
-    }
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get user from session
-    const user = findUserById(session.userId);
+    // Get user from token
+    const user = await User.findById(decoded.id).select('-password');
+    
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
