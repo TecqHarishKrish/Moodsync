@@ -1,35 +1,5 @@
 {
-  "name": "moodsync",
+  "name": "smart_alarm",
   "version": "1.0.0",
-  "description": "AI-Driven Mood-Adaptive Smart Alarm WebApp",
-  "main": "server/index.js",
-  "scripts": {
-    "start": "node server/index.js",
-    "server": "nodemon server/index.js",
-    "client": "cd client && npm start",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "install-client": "cd client && npm install",
-    "build": "cd client && npm run build",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm run install-client && npm run build"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
-    "date-fns": "^2.30.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-session": "^1.18.2",
-    "jsonwebtoken": "^9.0.1",
-    "mongoose": "^7.5.0",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.1",
-    "nodemon": "^3.0.1"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  }
+  "private": true
 }
