@@ -1,3 +1,4 @@
+// server/index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -12,85 +13,78 @@ const alarmRoutes = require('./routes/alarmRoutes');
 const authRoutes = require('./routes/authRoutes');
 const { errorHandler, notFound } = require('./middleware/auth');
 
-// Load environment variables
+// Load env
 dotenv.config();
 
-// Connect to MongoDB
+// Connect DB
 connectDB();
 
-// Initialize Express
 const app = express();
 
-// Enable CORS FIRST - before other middleware
+// Tell Express we are behind a proxy (needed for secure cookies on Render/HTTPS)
+app.set('trust proxy', 1);
+
+// ---------- CORS ----------
+const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: allowedOrigin,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
-// Middleware
+// ---------- Core middleware ----------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Session configuration
+// ---------- Session / Passport ----------
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: {
+    // On Render it's HTTPS; cookies must be secure and sameSite=None for cross-site requests from Vercel
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
-// Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// API Routes
+// ---------- Health checks ----------
+app.get('/health', (req, res) => {
+  res.json({ ok: true, ts: new Date().toISOString() });
+});
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ---------- API Routes ----------
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/alarms', alarmRoutes);
 
-// Add a simple health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// ---------- DO NOT serve React from Render ----------
+// Frontend is deployed on Vercel, so skip serving ../client/build here.
+// If you ever want to serve the client from the API, gate it with an env:
+// if (process.env.SERVE_CLIENT === 'true') {
+//   app.use(express.static(path.join(__dirname, '../client/build')));
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
+//   });
+// }
 
-// Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
-  });
-}
-
-// Error handling middleware
+// ---------- Errors ----------
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
+// ---------- Start ----------
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`API available at http://localhost:${PORT}/api`);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.error(`Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  server.close(() => process.exit(1));
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} on :${PORT}`);
+  console.log(`Allowed CORS origin: ${allowedOrigin}`);
 });
